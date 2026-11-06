@@ -523,11 +523,37 @@ body {
   }
   .sidebar.mobile-open,
   #sidebar.mobile-open {
-    transform: translate3d(0, 0, 0) !important;
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: min(88vw, 420px) !important;
+    max-width: 420px !important;
+    height: min(68dvh, 580px) !important;
+    max-height: 68dvh !important;
+    min-height: 260px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    transform: translate(-50%, -50%) !important;
     visibility: visible !important;
     pointer-events: auto !important;
     z-index: 1000 !important;
+    border: 1px solid #333 !important;
+    border-radius: 18px !important;
+    box-shadow: 0 24px 80px rgba(0,0,0,.75) !important;
+    overflow: hidden !important;
   }
+  .sidebar.mobile-open .sidebar-header { padding-top: 18px; }
+  .mun-chat-picker-close {
+    position: absolute; top: 14px; right: 14px;
+    width: 32px; height: 32px; display: inline-flex;
+    align-items: center; justify-content: center;
+    color: #ddd; background: #171717; border: 1px solid #333;
+    border-radius: 9px; font-size: 21px; line-height: 1;
+    cursor: pointer; z-index: 2;
+  }
+  .sidebar.mobile-open .logo-area { padding-right: 42px; }
   #sidebarBackdrop.active {
     display: block;
     position: fixed;
@@ -667,6 +693,7 @@ body {
       </svg>
       MUN
     </div>
+    <button class="mun-chat-picker-close" id="closeChatPicker" type="button" aria-label="Закрыть список чатов">×</button>
     <button class="new-chat-btn" id="newChatBtn">
       <span>+</span> Новый чат
     </button>
@@ -829,38 +856,23 @@ function openMunChatPicker(event) {
     event.stopPropagation();
   }
   if (!sidebar || !sidebarToggle) return;
-
-  // Explicitly place the drawer above its backdrop in Telegram's WebView.
   sidebar.classList.add('mobile-open');
-  sidebar.style.setProperty('position', 'fixed', 'important');
-  sidebar.style.setProperty('z-index', '1000', 'important');
-  sidebar.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
-  sidebar.style.setProperty('visibility', 'visible', 'important');
-  sidebar.style.setProperty('pointer-events', 'auto', 'important');
-
-  if (sidebarBackdrop) {
-    sidebarBackdrop.classList.add('active');
-    sidebarBackdrop.style.setProperty('z-index', '999', 'important');
-  }
+  if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
   const chatList = document.getElementById('chatList');
   if (chatList) chatList.setAttribute('aria-label', 'Выберите диалог');
 }
 function closeMunSidebar() {
   if (!sidebar) return;
   sidebar.classList.remove('mobile-open');
-  ['position', 'z-index', 'transform', 'visibility', 'pointer-events'].forEach(
-    property => sidebar.style.removeProperty(property)
-  );
-  if (sidebarBackdrop) {
-    sidebarBackdrop.classList.remove('active');
-    sidebarBackdrop.style.removeProperty('z-index');
-  }
+  if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
 }
 if (sidebarToggle) {
   sidebarToggle.addEventListener('click', openMunChatPicker);
   sidebarToggle.addEventListener('pointerdown', (event) => event.stopPropagation());
 }
 if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMunSidebar);
+const closeChatPicker = document.getElementById('closeChatPicker');
+if (closeChatPicker) closeChatPicker.addEventListener('click', closeMunSidebar);
 
 
 // Модалка
