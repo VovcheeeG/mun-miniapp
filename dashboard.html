@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MUN // API PLATFORM</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600&family=Inter:wght@300;400;500;600&display=swap');
+  
+  :root {
+    --bg: #050505;
+    --surface: rgba(20, 20, 24, 0.3);
+    --surface-hover: rgba(30, 30, 35, 0.5);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #f0f0f0;
+    --text-muted: #777777;
+    --accent: #ffffff;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body { 
+    font-family: 'Inter', sans-serif; 
+    background: var(--bg); 
+    color: var(--text); 
+    min-height: 100vh; 
+    overflow-x: hidden;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* =========================================
+     ЖИВОЙ ФОН (SVG ВОЛНЫ)
+     ========================================= */
+  .bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 50%, #0a0a0c 0%, #000000 100%);
+  }
+
+  .wave-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.7;
+  }
+
+  .wave-path {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Волна 1 - Горизонтальная, медленная */
+  .wave-1 {
+    animation: driftX 25s linear infinite;
+  }
+  .wave-1 .wave-path {
+    stroke: url(#grad1);
+    filter: drop-shadow(0 0 10px rgba(255,255,255,0.2));
+  }
+
+  /* Волна 2 - Диагональная, быстрая */
+  .wave-2 {
+    animation: driftY 35s linear infinite reverse;
+  }
+  .wave-2 .wave-path {
+    stroke: url(#grad2);
+    filter: drop-shadow(0 0 15px rgba(255,255,255,0.15));
+  }
+
+  /* Волна 3 - Круговая, пульсирующая */
+  .wave-3 {
+    animation: pulseScale 20s ease-in-out infinite alternate;
+  }
+  .wave-3 .wave-path {
+    stroke: url(#grad3);
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.1));
+  }
+
+  /* Волна 4 - Медленная, глубокая */
+  .wave-4 {
+    animation: driftX 40s linear infinite reverse;
+  }
+  .wave-4 .wave-path {
+    stroke: url(#grad4);
+    opacity: 0.5;
+  }
+
+  /* Анимации движения */
+  @keyframes driftX {
+    0% { transform: translateX(-10%) translateY(-5%) scale(1); }
+    50% { transform: translateX(10%) translateY(5%) scale(1.05); }
+    100% { transform: translateX(-10%) translateY(-5%) scale(1); }
+  }
+
+  @keyframes driftY {
+    0% { transform: translateY(-10%) rotate(0deg); }
+    50% { transform: translateY(10%) rotate(2deg); }
+    100% { transform: translateY(-10%) rotate(0deg); }
+  }
+
+  @keyframes pulseScale {
+    0% { transform: scale(1); opacity: 0.3; }
+    100% { transform: scale(1.2); opacity: 0.6; }
+  }
+
+  /* Текстура шума */
+  .noise-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    z-index: 0;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+
+  /* =========================================
+     КОНТЕНТ
+     ========================================= */
+  .container { 
+    max-width: 900px; 
+    margin: 0 auto; 
+    padding: 80px 24px;
+    position: relative;
+    z-index: 2;
+  }
+  
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 64px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+    animation: fadeInDown 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  h1 { 
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 20px; 
+    font-weight: 600; 
+    letter-spacing: 3px; 
+    text-transform: uppercase; 
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Мигающая точка статуса */
+  h1::before {
+    content: '';
+    display: block;
+    width: 8px;
+    height: 8px;
+    background: #fff;
+    border-radius: 50%;
+    box-shadow: 0 0 20px rgba(255,255,255,0.8);
+    animation: pulseDot 2.5s infinite;
+  }
+
+  @keyframes pulseDot {
+    0% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
+    70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 12px rgba(255,255,255,0); }
+    100% { transform: scale(0.9); opacity: 0.7; box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  }
+
+  h1 span {
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 1.5px;
+  }
+  
+  .back-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    transition: all 0.4s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .back-link:hover { 
+    color: #fff; 
+    transform: translateX(-5px);
+    text-shadow: 0 0 15px rgba(255,255,255,0.4); 
+  }
+  
+  /* =========================================
+     КАРТОЧКА СОЗДАНИЯ
+     ========================================= */
+  .card { 
+    background: var(--surface); 
+    border: 1px solid var(--border); 
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    padding: 48px; 
+    margin-bottom: 40px; 
+    position: relative;
+    animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+    transition: border-color 0.4s ease;
+  }
+
+  .card:hover {
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+  }
+  
+  h2 { 
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; 
+    font-weight: 400; 
+    color: var(--text-muted); 
+    text-transform: uppercase; 
+    margin-bottom: 36px; 
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    letter-spacing: 1px;
+  }
+
+  h2::before {
+    content: '>';
+    color: var(--accent);
+    font-weight: 600;
+  }
+  
+  .form-group { margin-bottom: 28px; }
+  
+  label { 
+    display: block; 
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; 
+    color: var(--text-muted); 
+    margin-bottom: 10px; 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  input, textarea { 
+    width: 100%; 
+    background: rgba(0, 0, 0, 0.3); 
+    border: 1px solid var(--border); 
+    color: var(--text); 
+    padding: 18px 20px; 
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px; 
+    transition: all 0.4s ease; 
+    border-radius: 2px;
+  }
+  
+  input:focus, textarea:focus { 
+    outline: none; 
+    border-color: rgba(255, 255, 255, 0.4); 
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+  }
+  
+  textarea { resize: vertical; min-height: 140px; }
+  
+  button { 
+    background: #ffffff; 
+    color: #000000; 
+    border: 1px solid #ffffff; 
+    padding: 18px 32px; 
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; 
+    font-weight: 600; 
+    text-transform: uppercase; 
+    cursor: pointer; 
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); 
+    width: 100%; 
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  button::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transition: left 0.6s ease;
+  }
+
+  button:hover::after {
+    left: 100%;
+  }
+  
+  button:hover { 
+    background: transparent; 
+    color: #ffffff; 
+    box-shadow: 0 0 40px rgba(255,255,255,0.15); 
+  }
+
+  button:active { transform: scale(0.98); }
+  
+  /* =========================================
+     СПИСОК АГЕНТОВ
+     ========================================= */
+  .agent-list { margin-top: 64px; }
+  
+  .agent-item { 
+    background: var(--surface); 
+    border: 1px solid var(--border); 
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 28px 36px; 
+    margin-bottom: 16px; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    border-radius: 2px;
+  }
+  
+  .agent-item:hover {
+    background: var(--surface-hover);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateX(8px) scale(1.01);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+
+  .agent-item:nth-child(2) { animation-delay: 0.1s; }
+  .agent-item:nth-child(3) { animation-delay: 0.2s; }
+  .agent-item:nth-child(4) { animation-delay: 0.3s; }
+  .agent-item:nth-child(5) { animation-delay: 0.4s; }
+  
+  .agent-info h3 { 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 16px; 
+    font-weight: 600; 
+    margin-bottom: 6px; 
+    color: #fff;
+  }
+  
+  .agent-info p { 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 11px; 
+    color: var(--text-muted); 
+  }
+  
+  .api-key { 
+    background: rgba(0, 0, 0, 0.5); 
+    padding: 12px 20px; 
+    font-family: 'JetBrains Mono', monospace; 
+    font-size: 13px; 
+    border: 1px solid var(--border); 
+    user-select: all; 
+    cursor: pointer; 
+    color: var(--text-muted);
+    transition: all 0.3s ease;
+    border-radius: 2px;
+  }
+  
+  .api-key:hover { 
+    color: #fff;
+    border-color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 20px rgba(255,255,255,0.1);
+    transform: scale(1.02);
+  }
+  
+  .empty-state {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    font-size: 13px;
+    animation: fadeInUp 0.8s both;
+    padding: 20px 0;
+  }
+
+  /* =========================================
+     СТИЛИ ДЛЯ АДАПТИВНОСТИ
+     ========================================= */
+  @media (max-width: 768px) {
+    .container { padding: 40px 16px; }
+    .card { padding: 32px 24px; }
+    .agent-item { flex-direction: column; align-items: flex-start; gap: 16px; }
+    .api-key { width: 100%; text-align: center; }
+    h1 { font-size: 16px; }
+    h1 span { display: none; }
+  }
+
+/* Telegram Mini App viewport + mobile fit only. Existing dashboard design and animations stay intact. */
+:root {
+  --mun-tg-top: var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --mun-tg-bottom: var(--tg-safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+}
+html { min-height: 100%; }
+body {
+  min-height: var(--tg-viewport-stable-height, 100dvh);
+  padding-bottom: var(--mun-tg-bottom);
+}
+.bg-canvas, .noise-overlay {
+  height: var(--tg-viewport-height, 100dvh);
+}
+@media (max-width: 768px) {
+  .container {
+    width: 100%;
+    min-width: 0;
+    padding-top: max(24px, var(--mun-tg-top));
+    padding-bottom: max(24px, var(--mun-tg-bottom));
+  }
+  header {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .back-link {
+    max-width: 100%;
+    min-height: 40px;
+  }
+  .card, .agent-item {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  input, textarea, button {
+    font-size: 16px;
+    max-width: 100%;
+  }
+  .api-key {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+</style>
+</head>
+<body>
+
+<!-- =========================================
+     ФОН С ДВИЖУЩИМИСЯ ВОЛНАМИ
+     ========================================= -->
+<div class="bg-canvas">
+  <!-- Градиенты для волн -->
+  <svg width="0" height="0">
+    <defs>
+      <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="rgba(255,255,255,0)" />
+        <stop offset="50%" stop-color="rgba(255,255,255,0.4)" />
+        <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+      </linearGradient>
+      <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="rgba(255,255,255,0)" />
+        <stop offset="50%" stop-color="rgba(255,255,255,0.3)" />
+        <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+      </linearGradient>
+      <radialGradient id="grad3" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="rgba(255,255,255,0.2)" />
+        <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+      </radialGradient>
+      <linearGradient id="grad4" x1="0%" y1="100%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="rgba(255,255,255,0)" />
+        <stop offset="50%" stop-color="rgba(255,255,255,0.25)" />
+        <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- Волна 1 -->
+  <div class="wave-container wave-1">
+    <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" width="100%" height="100%">
+      <path class="wave-path" d="M 0 500 C 200 800, 400 200, 1000 500" />
+      <path class="wave-path" d="M 0 550 C 250 850, 450 250, 1000 550" opacity="0.5" />
+    </svg>
+  </div>
+
+  <!-- Волна 2 -->
+  <div class="wave-container wave-2">
+    <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" width="100%" height="100%">
+      <path class="wave-path" d="M 1000 0 C 800 300, 600 700, 0 500" />
+      <path class="wave-path" d="M 950 50 C 750 350, 550 750, -50 550" opacity="0.4" />
+    </svg>
+  </div>
+
+  <!-- Волна 3 -->
+  <div class="wave-container wave-3">
+    <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" width="100%" height="100%">
+      <circle cx="500" cy="500" r="400" fill="url(#grad3)" />
+    </svg>
+  </div>
+
+  <!-- Волна 4 -->
+  <div class="wave-container wave-4">
+    <svg viewBox="0 0 1000 1000" preserveAspectRatio="none" width="100%" height="100%">
+      <path class="wave-path" d="M 0 200 C 300 100, 700 900, 1000 800" />
+    </svg>
+  </div>
+</div>
+
+<div class="noise-overlay"></div>
+
+<!-- =========================================
+     ОСНОВНОЙ КОНТЕНТ
+     ========================================= -->
+<div class="container">
+  <header>
+    <h1>MUN <span>// API PLATFORM</span></h1>
+    <a href="chat.html" class="back-link">[←] ВЕРНУТЬСЯ В ЧАТ</a>
+  </header>
+  
+  <div class="card">
+    <h2>СОЗДАТЬ АГЕНТА</h2>
+    <div class="form-group">
+      <label>AGENT NAME</label>
+      <input type="text" id="agentName" placeholder="e.g. Mun-Accountant">
+    </div>
+    <div class="form-group">
+      <label>SYSTEM PROMPT</label>
+      <textarea id="agentPrompt" placeholder="You are a strict accountant. Only answer tax questions..."></textarea>
+    </div>
+    <button onclick="createAgent()">ИНИЦИАЛИЗИРОВАТЬ</button>
+  </div>
+
+  <div class="agent-list" id="agentList">
+    <h2>АКТИВНЫЕ АГЕНТЫ</h2>
+    <p class="empty-state">Загрузка данных...</p>
+  </div>
+</div>
+
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+// Telegram Mini App viewport initialization; no visual styles or animations are modified.
+(function initTelegramDashboard() {
+  const tg = window.Telegram && window.Telegram.WebApp;
+  if (!tg) return;
+  try {
+    tg.ready();
+    tg.expand();
+    const applyViewport = () => {
+      const h = tg.viewportHeight || window.innerHeight;
+      document.documentElement.style.setProperty("--tg-viewport-height", h + "px");
+      document.documentElement.style.setProperty("--tg-viewport-stable-height", (tg.viewportStableHeight || h) + "px");
+    };
+    applyViewport();
+    if (typeof tg.onEvent === "function") tg.onEvent("viewportChanged", applyViewport);
+    window.addEventListener("resize", applyViewport, { passive: true });
+  } catch (e) { console.warn("Telegram WebApp initialization:", e); }
+})();
+
+const API = 'http://127.0.0.1:8000';
+
+async function createAgent() {
+  const name = document.getElementById('agentName').value.trim();
+  const prompt = document.getElementById('agentPrompt').value.trim();
+  
+  if (!name || !prompt) {
+    alert('Заполните все поля!');
+    return;
+  }
+
+  try {
+    const res = await fetch(API + '/create_agent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, prompt: prompt })
+    });
+    const data = await res.json();
+    
+    alert(`AGENT: ${data.agent_name}\nSTATUS: ACTIVE\n\nAPI KEY:\n${data.api_key}\n\nСОХРАНИТЕ КЛЮЧ.`);
+    
+    document.getElementById('agentName').value = '';
+    document.getElementById('agentPrompt').value = '';
+    loadAgents();
+  } catch (e) {
+    alert('ERROR: ' + e.message);
+  }
+}
+
+async function loadAgents() {
+  try {
+    const res = await fetch(API + '/list_agents');
+    const agents = await res.json();
+    const list = document.getElementById('agentList');
+    
+    if (agents.length === 0) {
+      list.innerHTML = '<h2>АКТИВНЫЕ АГЕНТЫ</h2><p class="empty-state">Нет активных процессов.</p>';
+      return;
+    }
+    
+    let html = '<h2>АКТИВНЫЕ АГЕНТЫ</h2>';
+    agents.forEach(agent => {
+      html += `
+        <div class="agent-item">
+          <div class="agent-info">
+            <h3>${agent.agent_name}</h3>
+            <p>INIT: ${new Date(agent.created_at).toLocaleString()}</p>
+          </div>
+          <div class="api-key" title="Скопировать" 
+               onclick="navigator.clipboard.writeText('${agent.api_key}'); this.innerText='COPIED'; setTimeout(() => this.innerText='${agent.api_key}', 1000)">
+            ${agent.api_key}
+          </div>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  } catch (e) {
+    console.error(e);
+    list.innerHTML = '<h2>АКТИВНЫЕ АГЕНТЫ</h2><p class="empty-state">Ошибка соединения.</p>';
+  }
+}
+
+loadAgents();
+</script>
+</body>
+</html>
