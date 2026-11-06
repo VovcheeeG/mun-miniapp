@@ -692,27 +692,40 @@ body {
 (function initTelegramLayout() {
   const tg = window.Telegram && window.Telegram.WebApp;
   if (!tg) return;
+
   try {
     tg.ready();
     tg.expand();
+
     const applyViewport = () => {
       const h = tg.viewportHeight || window.innerHeight;
       document.documentElement.style.setProperty("--tg-viewport-height", h + "px");
+
       const stable = tg.viewportStableHeight || h;
       document.documentElement.style.setProperty("--tg-viewport-stable-height", stable + "px");
     };
-    applyViewport();
-    if (typeof tg.onEvent === "function") tg.onEvent("viewportChanged", applyViewport);
-    window.addEventListener("resize", applyViewport, { passive: true });
-    if (tg.BackButton && typeof tg.BackButton.onClick === "function") {
-      tg.BackButton.onClick(() => {
-        const side = document.getElementById("sidebar");
-        if (side && side.classList.contains("mobile-open")) closeMunSidebar();
-      });
-    }
-  } catch (e) { console.warn("Telegram WebApp initialization:", e); }
-})();
 
+    applyViewport();
+
+    if (typeof tg.onEvent === "function") {
+      tg.onEvent("viewportChanged", applyViewport);
+      tg.onEvent("fullscreenChanged", applyViewport);
+    }
+
+    window.addEventListener("resize", applyViewport, { passive: true });
+
+    // Запрос полноэкранного режима при открытии MUN
+    if (typeof tg.requestFullscreen === "function") {
+      tg.requestFullscreen()
+        .then(applyViewport)
+        .catch((error) => {
+          console.warn("MUN fullscreen unavailable:", error);
+        });
+    }
+  } catch (e) {
+    console.warn("Telegram WebApp initialization:", e);
+  }
+})();
 // =========================================
 //  АНИМАЦИЯ ЗАГРУЗКИ (Замедленная и плавная)
 // =========================================
