@@ -521,8 +521,12 @@ body {
   .sidebar.visible {
     transform: translateX(-105%);
   }
-  .sidebar.mobile-open {
-    transform: translateX(0);
+  .sidebar.mobile-open,
+  #sidebar.mobile-open {
+    transform: translate3d(0, 0, 0) !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    z-index: 1000 !important;
   }
   #sidebarBackdrop.active {
     display: block;
@@ -825,15 +829,32 @@ function openMunChatPicker(event) {
     event.stopPropagation();
   }
   if (!sidebar || !sidebarToggle) return;
+
+  // Explicitly place the drawer above its backdrop in Telegram's WebView.
   sidebar.classList.add('mobile-open');
-  if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+  sidebar.style.setProperty('position', 'fixed', 'important');
+  sidebar.style.setProperty('z-index', '1000', 'important');
+  sidebar.style.setProperty('transform', 'translate3d(0, 0, 0)', 'important');
+  sidebar.style.setProperty('visibility', 'visible', 'important');
+  sidebar.style.setProperty('pointer-events', 'auto', 'important');
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.classList.add('active');
+    sidebarBackdrop.style.setProperty('z-index', '999', 'important');
+  }
   const chatList = document.getElementById('chatList');
   if (chatList) chatList.setAttribute('aria-label', 'Выберите диалог');
 }
 function closeMunSidebar() {
   if (!sidebar) return;
   sidebar.classList.remove('mobile-open');
-  if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+  ['position', 'z-index', 'transform', 'visibility', 'pointer-events'].forEach(
+    property => sidebar.style.removeProperty(property)
+  );
+  if (sidebarBackdrop) {
+    sidebarBackdrop.classList.remove('active');
+    sidebarBackdrop.style.removeProperty('z-index');
+  }
 }
 if (sidebarToggle) {
   sidebarToggle.addEventListener('click', openMunChatPicker);
