@@ -764,12 +764,6 @@ body {
         console.warn("MUN fullscreen unavailable:", error);
       }
     }
-    if (tg.BackButton && typeof tg.BackButton.onClick === "function") {
-      tg.BackButton.onClick(() => {
-        const side = document.getElementById("sidebar");
-        if (side && side.classList.contains("mobile-open")) closeMunSidebar();
-      });
-    }
   } catch (e) { console.warn("Telegram WebApp initialization:", e); }
 })();
 
@@ -825,23 +819,26 @@ const newChatBtn = document.getElementById('newChatBtn');
 // Three-line button is the MUN chat switcher: it opens the chat list.
 const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-function openMunChatPicker() {
+function openMunChatPicker(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   if (!sidebar || !sidebarToggle) return;
   sidebar.classList.add('mobile-open');
   if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
   const chatList = document.getElementById('chatList');
   if (chatList) chatList.setAttribute('aria-label', 'Выберите диалог');
-  const tg = window.Telegram && window.Telegram.WebApp;
-  if (tg && tg.BackButton && typeof tg.BackButton.show === 'function') tg.BackButton.show();
 }
 function closeMunSidebar() {
   if (!sidebar) return;
   sidebar.classList.remove('mobile-open');
   if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
-  const tg = window.Telegram && window.Telegram.WebApp;
-  if (tg && tg.BackButton && typeof tg.BackButton.hide === 'function') tg.BackButton.hide();
 }
-if (sidebarToggle) sidebarToggle.addEventListener('click', openMunChatPicker);
+if (sidebarToggle) {
+  sidebarToggle.addEventListener('click', openMunChatPicker);
+  sidebarToggle.addEventListener('pointerdown', (event) => event.stopPropagation());
+}
 if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMunSidebar);
 
 
