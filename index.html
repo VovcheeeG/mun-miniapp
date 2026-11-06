@@ -693,7 +693,7 @@ body {
     <div class="input-wrapper">
       <textarea id="prompt" placeholder="Задайте вопрос..."></textarea>
       <div class="mun-mobile-tools">
-        <button id="sidebarToggle" type="button" aria-label="Открыть список чатов" title="История чатов">
+        <button id="sidebarToggle" type="button" aria-label="Выбрать другой чат" title="Выбрать другой чат">
           <span class="mun-hamburger" aria-hidden="true"><i></i><i></i><i></i></span>
         </button>
         <a href="dashboard.html" class="mun-dashboard-link">
@@ -822,13 +822,15 @@ const pdfUpload = document.getElementById('pdfUpload');
 const chatListEl = document.getElementById('chatList');
 const newChatBtn = document.getElementById('newChatBtn');
 
-// Mobile chat drawer. Desktop sidebar behavior and its intro animation remain unchanged.
+// Three-line button is the MUN chat switcher: it opens the chat list.
 const sidebarToggle = document.getElementById('sidebarToggle');
 const sidebarBackdrop = document.getElementById('sidebarBackdrop');
-function openMunSidebar() {
+function openMunChatPicker() {
   if (!sidebar || !sidebarToggle) return;
   sidebar.classList.add('mobile-open');
   if (sidebarBackdrop) sidebarBackdrop.classList.add('active');
+  const chatList = document.getElementById('chatList');
+  if (chatList) chatList.setAttribute('aria-label', 'Выберите диалог');
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg && tg.BackButton && typeof tg.BackButton.show === 'function') tg.BackButton.show();
 }
@@ -839,7 +841,7 @@ function closeMunSidebar() {
   const tg = window.Telegram && window.Telegram.WebApp;
   if (tg && tg.BackButton && typeof tg.BackButton.hide === 'function') tg.BackButton.hide();
 }
-if (sidebarToggle) sidebarToggle.addEventListener('click', openMunSidebar);
+if (sidebarToggle) sidebarToggle.addEventListener('click', openMunChatPicker);
 if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMunSidebar);
 
 
