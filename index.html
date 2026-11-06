@@ -490,7 +490,8 @@ body {
 }
 
 /* The menu control is only shown on compact screens. */
-#sidebarToggle {
+#sidebarToggle,
+.mun-mobile-tools {
   display: none;
 }
 #sidebarBackdrop {
@@ -539,72 +540,70 @@ body {
     min-height: 0;
   }
   header {
-    /* Keep MUN controls in their own row below Telegram's native header. */
-    min-height: 62px;
-    margin-top: var(--mun-content-top, 108px);
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
+    min-height: 52px;
+    padding-top: max(10px, var(--mun-tg-top)) !important;
     padding-left: 14px !important;
     padding-right: 14px !important;
+  }
+  /* Mobile utility actions live beside the lawyer-mode controls, not in Telegram's title bar. */
+  header .nav-link,
+  header > div:first-child { display: none !important; }
+
+  .mun-mobile-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 34px;
+    margin: 0 0 2px;
   }
   #sidebarToggle {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
-    flex: 0 0 38px;
-    color: #c8c8c8;
-    background: rgba(255,255,255,.035);
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    color: #c9c9c9;
+    background: transparent;
     border: 1px solid #303030;
-    border-radius: 11px;
+    border-radius: 9px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: background .2s ease, border-color .2s ease;
   }
-  #sidebarToggle:active {
-    background: rgba(255,255,255,.09);
-    border-color: #555;
-  }
-  #sidebarToggle svg { display: block; }
-  header > div:first-child {
+  .mun-hamburger {
+    width: 16px;
     display: flex;
-    align-items: center;
-    min-width: 38px;
+    flex-direction: column;
+    gap: 3px;
   }
-  header .nav-link {
+  .mun-hamburger i {
+    display: block;
+    width: 16px;
+    height: 1.5px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .mun-dashboard-link {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
-    gap: 9px;
-    min-height: 38px;
-    padding: 0 13px;
+    gap: 8px;
+    min-height: 34px;
+    padding: 0 11px;
     color: #d0d0d0;
-    background: rgba(255,255,255,.035);
+    background: transparent;
     border: 1px solid #303030;
-    border-radius: 11px;
+    border-radius: 9px;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px !important;
-    letter-spacing: 1.1px;
+    font-size: 9px;
+    letter-spacing: .9px;
     text-decoration: none;
+    text-transform: uppercase;
     white-space: nowrap;
     -webkit-tap-highlight-color: transparent;
   }
-  header .nav-kicker {
-    color: #858585;
-    font-size: 9px;
-    letter-spacing: 1.3px;
-  }
-  header .nav-divider {
-    width: 1px;
-    height: 15px;
-    background: #454545;
-  }
-  header .nav-title {
-    color: #e8e8e8;
-    font-size: 10px;
-    letter-spacing: .9px;
-  }
+  .mun-dashboard-link span:first-child { color: #858585; }
+  .mun-tools-divider { width: 1px; height: 13px; background: #454545; }
+  .mun-dashboard-link span:last-child { color: #e8e8e8; }
   .input-container {
     padding-bottom: max(10px, var(--mun-tg-bottom)) !important;
   }
@@ -684,17 +683,8 @@ body {
 <!-- ОСНОВНОЙ КОНТЕНТ -->
 <div class="main-content" id="mainContent">
   <header>
-    <div><button id="sidebarToggle" type="button" aria-label="Открыть список чатов">
-      <svg viewBox="0 0 24 24" width="19" height="19" fill="none" aria-hidden="true">
-        <rect x="3.5" y="4" width="17" height="16" rx="3" stroke="currentColor" stroke-width="1.5"/>
-        <path d="M9 4.5v15M12.5 9h4M12.5 12h4M12.5 15h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-    </button></div>
-    <a href="dashboard.html" class="nav-link">
-      <span class="nav-kicker">API</span>
-      <span class="nav-divider" aria-hidden="true"></span>
-      <span class="nav-title">Dashboard</span>
-    </a>
+    <div class="desktop-header-spacer"></div>
+    <a href="dashboard.html" class="nav-link">[ API DASHBOARD ]</a>
   </header>
 
   <div id="messages"></div>
@@ -702,6 +692,14 @@ body {
   <div class="input-container">
     <div class="input-wrapper">
       <textarea id="prompt" placeholder="Задайте вопрос..."></textarea>
+      <div class="mun-mobile-tools">
+        <button id="sidebarToggle" type="button" aria-label="Открыть список чатов" title="История чатов">
+          <span class="mun-hamburger" aria-hidden="true"><i></i><i></i><i></i></span>
+        </button>
+        <a href="dashboard.html" class="mun-dashboard-link">
+          <span>API</span><span class="mun-tools-divider" aria-hidden="true"></span><span>Dashboard</span>
+        </a>
+      </div>
       <div class="controls">
         <div class="mode-switch" id="lawyerSwitch">
           <div class="slider"></div>
@@ -749,28 +747,18 @@ body {
       document.documentElement.style.setProperty("--tg-viewport-height", h + "px");
       const stable = tg.viewportStableHeight || h;
       document.documentElement.style.setProperty("--tg-viewport-stable-height", stable + "px");
-
-      const hasContentInset = tg.contentSafeAreaInset &&
-        typeof tg.contentSafeAreaInset.top === "number";
-      const contentTop = hasContentInset ? tg.contentSafeAreaInset.top : 108;
-      document.documentElement.style.setProperty("--mun-content-top", contentTop + "px");
     };
     applyViewport();
     if (typeof tg.onEvent === "function") {
       tg.onEvent("viewportChanged", applyViewport);
       tg.onEvent("fullscreenChanged", applyViewport);
-      tg.onEvent("safeAreaChanged", applyViewport);
-      tg.onEvent("contentSafeAreaChanged", applyViewport);
     }
     window.addEventListener("resize", applyViewport, { passive: true });
-
     if (typeof tg.requestFullscreen === "function") {
       try {
-        const fullscreenResult = tg.requestFullscreen();
-        if (fullscreenResult && typeof fullscreenResult.then === "function") {
-          fullscreenResult.then(applyViewport).catch((error) => {
-            console.warn("MUN fullscreen unavailable:", error);
-          });
+        const result = tg.requestFullscreen();
+        if (result && typeof result.then === "function") {
+          result.then(applyViewport).catch(error => console.warn("MUN fullscreen unavailable:", error));
         }
       } catch (error) {
         console.warn("MUN fullscreen unavailable:", error);
